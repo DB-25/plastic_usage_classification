@@ -1,11 +1,11 @@
-import torch
-from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms, datasets
-from torchvision import datasets
-from torch.utils.data import random_split
-from torch.utils.data import DataLoader
-from torchvision import transforms
 import os
+
+import torch
+from torch.utils.data import DataLoader
+from torch.utils.data import Dataset
+from torch.utils.data import random_split
+from torchvision import datasets
+from torchvision import transforms
 
 # Set the random seed for reproducibility
 random_seed = 123
@@ -13,14 +13,15 @@ torch.manual_seed(random_seed)
 
 # Define the transforms
 dataTransform = transforms.Compose([
-    transforms.Resize((224, 224)),   # Resize to a fixed size
+    transforms.Resize((224, 224)),  # Resize to a fixed size
     # transforms.Pad((100, 100), fill=0),   # Pad with zeros to match the desired size
     # transforms.RandomHorizontalFlip(),   # Apply horizontal flip randomly
     # transforms.RandomRotation(10),   # Rotate the image randomly by up to 10 degrees
-    transforms.ToTensor(),   # Convert the image to a tensor
-    transforms.Normalize([0.7561, 0.7166, 0.6853], [0.2465, 0.2584, 0.2781])   # Normalize the pixel values
-
+    transforms.ToTensor(),  # Convert the image to a tensor
+    transforms.Normalize([0.7561, 0.7166, 0.6853], [0.2465, 0.2584, 0.2781]),  # Normalize the pixel values
+    # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
+
 
 class CachedDataset(Dataset):
     def __init__(self, data, save_dir=None):
@@ -47,6 +48,7 @@ class CachedDataset(Dataset):
             self.cache[idx] = transformed_x, y
             return transformed_x, y
 
+
 class CachedDataLoader(DataLoader):
     def __init__(self, dataset, batch_size=1, shuffle=False, num_workers=0, pin_memory=False, save_dir=None):
         super().__init__(
@@ -71,7 +73,6 @@ class CachedDataLoader(DataLoader):
         return images, labels
 
 
-
 def getData(batch_size, train_split):
     # Set the paths for the train and validation sets
     data_dir = './dataset/plasticClassification'
@@ -81,16 +82,19 @@ def getData(batch_size, train_split):
     data = datasets.ImageFolder(data_dir, transform=dataTransform)
     # Split the train dataset to get a smaller train set and a validation set
     train_size = int(train_split * len(data))
-    val_size = int((len(data) - train_size)/2)
+    val_size = int((len(data) - train_size) / 2)
     test_size = len(data) - train_size - val_size
     train_data, val_data, test_data = random_split(data, [train_size, val_size, test_size])
     # Create a directory to save augmented images
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     # Create the data loaders for train and val using CachedDataLoader
-    data_loader = CachedDataLoader(data, batch_size=batch_size, shuffle=True, num_workers=0, pin_memory=True, save_dir=None)
-    train_loader = CachedDataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=0, pin_memory=True, save_dir=None)
-    val_loader = CachedDataLoader(val_data, batch_size=batch_size, shuffle=False, num_workers=0, pin_memory=True, save_dir=None)
-    test_loader = CachedDataLoader(test_data, batch_size=batch_size, shuffle=False, num_workers=0, pin_memory=True, save_dir=None)
+    data_loader = CachedDataLoader(data, batch_size=batch_size, shuffle=True, num_workers=0, pin_memory=True,
+                                   save_dir=None)
+    train_loader = CachedDataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=0, pin_memory=True,
+                                    save_dir=None)
+    val_loader = CachedDataLoader(val_data, batch_size=batch_size, shuffle=False, num_workers=0, pin_memory=True,
+                                  save_dir=None)
+    test_loader = CachedDataLoader(test_data, batch_size=batch_size, shuffle=False, num_workers=0, pin_memory=True,
+                                   save_dir=None)
     return data_loader, train_loader, val_loader, test_loader
-    
