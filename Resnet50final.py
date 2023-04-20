@@ -37,7 +37,7 @@ classification_models = models.list_models(module=models)
 print("All available models in Torch Vision : \n", classification_models)
 
 # global variables
-EPOCHS = 50
+EPOCHS = 200
 BATCH_SIZE = 64
 TRAIN_SPLIT = 0.8
 MLP_HIDDEN_SIZES = [1024, 512, 256]
