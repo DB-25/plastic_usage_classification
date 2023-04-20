@@ -1,15 +1,18 @@
+import errno
+import os
+from collections import Counter
+
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from sklearn.metrics import confusion_matrix
 from torchvision import models
 from tqdm import tqdm
-import numpy as np
-from collections import Counter
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.metrics import confusion_matrix
-import os
+
 import cached_dataloader
 from basemodels import MLP
 from metrics import *
