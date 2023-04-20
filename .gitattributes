@@ -1,0 +1,2 @@
+*.pt filter=lfs diff=lfs merge=lfs -text
+best_models/BestResnet50.pt filter=lfs diff=lfs merge=lfs -text

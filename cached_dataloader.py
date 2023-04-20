@@ -7,14 +7,18 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 import os
 
+# Set the random seed for reproducibility
+random_seed = 123
+torch.manual_seed(random_seed)
+
 # Define the transforms
 dataTransform = transforms.Compose([
-    transforms.Resize((800, 600)),   # Resize to a fixed size
+    transforms.Resize((224, 224)),   # Resize to a fixed size
     # transforms.Pad((100, 100), fill=0),   # Pad with zeros to match the desired size
     # transforms.RandomHorizontalFlip(),   # Apply horizontal flip randomly
     # transforms.RandomRotation(10),   # Rotate the image randomly by up to 10 degrees
     transforms.ToTensor(),   # Convert the image to a tensor
-    # transforms.Normalize([0.7561, 0.7167, 0.6854], [0.2532, 0.2650, 0.2840])   # Normalize the pixel values
+    transforms.Normalize([0.7561, 0.7166, 0.6853], [0.2465, 0.2584, 0.2781])   # Normalize the pixel values
 
 ])
 
@@ -77,13 +81,16 @@ def getData(batch_size, train_split):
     data = datasets.ImageFolder(data_dir, transform=dataTransform)
     # Split the train dataset to get a smaller train set and a validation set
     train_size = int(train_split * len(data))
-    val_size = len(data) - train_size
-    train_data, val_data = random_split(data, [train_size, val_size])
+    val_size = int((len(data) - train_size)/2)
+    test_size = len(data) - train_size - val_size
+    train_data, val_data, test_data = random_split(data, [train_size, val_size, test_size])
     # Create a directory to save augmented images
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     # Create the data loaders for train and val using CachedDataLoader
+    data_loader = CachedDataLoader(data, batch_size=batch_size, shuffle=True, num_workers=0, pin_memory=True, save_dir=None)
     train_loader = CachedDataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=0, pin_memory=True, save_dir=None)
     val_loader = CachedDataLoader(val_data, batch_size=batch_size, shuffle=False, num_workers=0, pin_memory=True, save_dir=None)
-    return train_loader, val_loader
+    test_loader = CachedDataLoader(test_data, batch_size=batch_size, shuffle=False, num_workers=0, pin_memory=True, save_dir=None)
+    return data_loader, train_loader, val_loader, test_loader
     
