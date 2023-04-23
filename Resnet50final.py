@@ -12,6 +12,7 @@ import torch.optim as optim
 from sklearn.metrics import confusion_matrix
 from torchvision import models
 from tqdm import tqdm
+import optuna
 
 import cached_dataloader
 from basemodels import MLP
@@ -37,13 +38,13 @@ classification_models = models.list_models(module=models)
 print("All available models in Torch Vision : \n", classification_models)
 
 # global variables
-EPOCHS = 200
-BATCH_SIZE = 64
-TRAIN_SPLIT = 0.8
-MLP_HIDDEN_SIZES = [1024, 512, 256]
-DROPOUT_PROB = [0.2, 0.1, 0.05]
-LR = 0.1
-MOMENTUM = 0.9
+# EPOCHS = 200
+# BATCH_SIZE = 64
+# TRAIN_SPLIT = 0.8
+# MLP_HIDDEN_SIZES = [1024, 512, 256]
+# DROPOUT_PROB = [0.2, 0.1, 0.05]
+# LR = 0.1
+# MOMENTUM = 0.9
 NUM_CLASSES = 4
 REGULARIZATION = False
 REG_LAMBDA = 0.005
@@ -51,64 +52,64 @@ LABELS = ["Heavy Plastic", "No Image", "No Plastic", "Some Plastic"]
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-data_loader, train_loader, val_loader, test_loader = cached_dataloader.getData(BATCH_SIZE, TRAIN_SPLIT)
+# data_loader, train_loader, val_loader, test_loader = cached_dataloader.getData(BATCH_SIZE, TRAIN_SPLIT)
 
 # count the number of instances for each label in the entire data
-data_labels = []
-for _, labels in data_loader:
-    data_labels += labels.tolist()
-data_label_counts = dict(Counter(data_labels))
+# data_labels = []
+# for _, labels in data_loader:
+#     data_labels += labels.tolist()
+# data_label_counts = dict(Counter(data_labels))
+#
+# # count the number of instances for each label in the train split
+# train_labels = []
+# for _, labels in train_loader:
+#     train_labels += labels.tolist()
+# train_label_counts = dict(Counter(train_labels))
+#
+# # count the number of instances for each label in the test split
+# test_labels = []
+# for _, labels in test_loader:
+#     test_labels += labels.tolist()
+# test_label_counts = dict(Counter(test_labels))
+#
+# # count the number of instances for each label in the val split
+# val_labels = []
+# for _, labels in val_loader:
+#     val_labels += labels.tolist()
+# val_label_counts = dict(Counter(val_labels))
+#
+# print("Data label counts:", data_label_counts)
+# print("Train label counts:", train_label_counts)
+# print("Test label counts:", test_label_counts)
+# print("Val label counts:", val_label_counts)
 
-# count the number of instances for each label in the train split
-train_labels = []
-for _, labels in train_loader:
-    train_labels += labels.tolist()
-train_label_counts = dict(Counter(train_labels))
-
-# count the number of instances for each label in the test split
-test_labels = []
-for _, labels in test_loader:
-    test_labels += labels.tolist()
-test_label_counts = dict(Counter(test_labels))
-
-# count the number of instances for each label in the val split
-val_labels = []
-for _, labels in val_loader:
-    val_labels += labels.tolist()
-val_label_counts = dict(Counter(val_labels))
-
-print("Data label counts:", data_label_counts)
-print("Train label counts:", train_label_counts)
-print("Test label counts:", test_label_counts)
-print("Val label counts:", val_label_counts)
-
-# load the pre-trained ResNet50 model
-# model = torch.hub.load('pytorch/vision:v0.9.0', 'resnet101', weights='ResNet101_Weights.DEFAULT')
-model = models.resnet50(pretrained=True)
-
-# replace the last fully connected layer with a new one for our specific classification task
-in_features = model.fc.in_features
-model.fc = MLP(in_channels=in_features,
-               num_classes=NUM_CLASSES,
-               hidden_sizes=MLP_HIDDEN_SIZES,
-               dropout_probability=DROPOUT_PROB)
-
-# Enable Fine-tuning
-for params in model.parameters():
-    params.requires_grad = True
-
-# move the model to the device
-model = model.to(device)
-
-# define the optimizer
-optimizer = optim.SGD(model.parameters(), lr=LR, momentum=MOMENTUM, weight_decay=0.0005)
-# optimizer = optim.Adam(model.parameters(), lr=LR)
-
-# define the learning rate scheduler
-lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=15, gamma=0.1)
-
-# define the loss function
-criterion = nn.CrossEntropyLoss()
+# # load the pre-trained ResNet50 model
+# # model = torch.hub.load('pytorch/vision:v0.9.0', 'resnet101', weights='ResNet101_Weights.DEFAULT')
+# model = models.resnet50(pretrained=True)
+#
+# # replace the last fully connected layer with a new one for our specific classification task
+# in_features = model.fc.in_features
+# model.fc = MLP(in_channels=in_features,
+#                num_classes=NUM_CLASSES,
+#                hidden_sizes=MLP_HIDDEN_SIZES,
+#                dropout_probability=DROPOUT_PROB)
+#
+# # Enable Fine-tuning
+# for params in model.parameters():
+#     params.requires_grad = True
+#
+# # move the model to the device
+# model = model.to(device)
+#
+# # define the optimizer
+# optimizer = optim.SGD(model.parameters(), lr=LR, momentum=MOMENTUM, weight_decay=0.0005)
+# # optimizer = optim.Adam(model.parameters(), lr=LR)
+#
+# # define the learning rate scheduler
+# lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=15, gamma=0.1)
+#
+# # define the loss function
+# criterion = nn.CrossEntropyLoss()
 
 
 def train(train_loader, val_loader, device, model, criterion, optimizer, lr_scheduler, epochs=10):
@@ -257,8 +258,84 @@ def test(test_loader, device, model):
     print(f'Test recall: {test_recall:.3f}')
     print(f'Test F1 score: {test_f1:.3f}')
 
+# Do hyperparameter tuning using Optuna
+def objective(trial):
+    # Set hyperparameters to tune
+    BATCH_SIZE = trial.suggest_categorical("BATCH_SIZE", [16, 32, 64])
+    EPOCHS = trial.suggest_categorical("EPOCHS", [10, 20, 30])
+    LR = trial.suggest_categorical("LR", [0.001, 0.01, 0.1])
+    MOMENTUM = trial.suggest_categorical("MOMENTUM", [0.9, 0.95, 0.99])
+    WEIGHT_DECAY = trial.suggest_categorical("WEIGHT_DECAY", [0.0001, 0.001, 0.01])
+    STEP_SIZE = trial.suggest_categorical("STEP_SIZE", [5, 10, 15])
+    GAMMA = trial.suggest_categorical("GAMMA", [0.1, 0.5, 0.9])
+    TRAIN_SPLIT = trial.suggest_categorical("TRAIN_SPLIT", [0.7, 0.8, 0.9])
+    MLP_HIDDEN_SIZES = trial.suggest_categorical("MLP_HIDDEN_SIZES", [[256, 128, 64], [512, 256, 128], [1024, 512, 256]])
+    DROPOUT = trial.suggest_categorical("DROPOUT", [0.0, 0.1, 0.2])
 
-best_model, train_metrics = train(train_loader, val_loader, device, model, criterion, optimizer, lr_scheduler, EPOCHS)
+    # get data loaders
+    data_loader, train_loader, val_loader, test_loader = cached_dataloader.getData(BATCH_SIZE, TRAIN_SPLIT)
+
+    # make model
+    model = models.resnet50(pretrained=True)
+    in_features = model.fc.in_features
+
+    model.fc = MLP(in_features, NUM_CLASSES, MLP_HIDDEN_SIZES, DROPOUT)
+
+    for params in model.parameters():
+        params.requires_grad = True
+
+    model = model.to(device)
+
+    optimizer = optim.SGD(model.parameters(), lr=LR, momentum=MOMENTUM, weight_decay=WEIGHT_DECAY)
+
+    lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=STEP_SIZE, gamma=GAMMA)
+
+    criterion = nn.BCEWithLogitsLoss()
+
+    best_model, train_metrics = train(train_loader, val_loader, device, model, criterion, optimizer, lr_scheduler, EPOCHS)
+    trial.set_user_attr("best_model", best_model)
+    trial.set_user_attr("train_metrics", train_metrics)
+    trial.set_user_attr("BATCH_SIZE", BATCH_SIZE)
+    trial.set_user_attr("EPOCHS", EPOCHS)
+    trial.set_user_attr("LR", LR)
+    trial.set_user_attr("MOMENTUM", MOMENTUM)
+    trial.set_user_attr("WEIGHT_DECAY", WEIGHT_DECAY)
+    trial.set_user_attr("STEP_SIZE", STEP_SIZE)
+    trial.set_user_attr("GAMMA", GAMMA)
+    trial.set_user_attr("TRAIN_SPLIT", TRAIN_SPLIT)
+    trial.set_user_attr("MLP_HIDDEN_SIZES", MLP_HIDDEN_SIZES)
+    trial.set_user_attr("DROPOUT", DROPOUT)
+    return train_metrics["val_acc"][-1]
+
+
+study = optuna.create_study(direction="maximize")
+study.optimize(objective, n_trials=10)
+
+# best_model, train_metrics = train(train_loader, val_loader, device, model, criterion, optimizer, lr_scheduler, EPOCHS)
+best_model = study.best_trial.user_attrs["best_model"]
+train_metrics = study.best_trial.user_attrs["train_metrics"]
+BATCH_SIZE = study.best_trial.user_attrs["BATCH_SIZE"]
+EPOCHS = study.best_trial.user_attrs["EPOCHS"]
+LR = study.best_trial.user_attrs["LR"]
+MOMENTUM = study.best_trial.user_attrs["MOMENTUM"]
+WEIGHT_DECAY = study.best_trial.user_attrs["WEIGHT_DECAY"]
+TRAIN_SPLIT = study.best_trial.user_attrs["TRAIN_SPLIT"]
+MLP_HIDDEN_SIZES = study.best_trial.user_attrs["MLP_HIDDEN_SIZES"]
+
+# print best hyperparameters
+print(f'Best hyperparameters: \n'
+        f'BATCH_SIZE: {BATCH_SIZE} \n'
+        f'EPOCHS: {EPOCHS} \n'
+        f'LR: {LR} \n'
+        f'MOMENTUM: {MOMENTUM} \n'
+        f'WEIGHT_DECAY: {WEIGHT_DECAY} \n'
+        f'TRAIN_SPLIT: {TRAIN_SPLIT} \n'
+        f'MLP_HIDDEN_SIZES: {MLP_HIDDEN_SIZES} \n')
+
+
+# get data loaders
+data_loader, train_loader, val_loader, test_loader = cached_dataloader.getData(BATCH_SIZE, TRAIN_SPLIT)
+
 test(test_loader, device, best_model)
 
 # Create some sample input data
