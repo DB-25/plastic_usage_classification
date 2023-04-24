@@ -1,9 +1,9 @@
 import errno
 import os
-from collections import Counter
 
 import matplotlib.pyplot as plt
 import numpy as np
+import optuna
 import seaborn as sns
 import torch
 import torch.nn as nn
@@ -12,7 +12,6 @@ import torch.optim as optim
 from sklearn.metrics import confusion_matrix
 from torchvision import models
 from tqdm import tqdm
-import optuna
 
 import cached_dataloader
 from basemodels import MLP
@@ -222,7 +221,6 @@ def train(train_loader, val_loader, device, model, criterion, optimizer, lr_sche
 
     return best_model, train_metrics
 
-
 def test(test_loader, device, model):
     true = []
     pred = []
@@ -262,15 +260,15 @@ def test(test_loader, device, model):
 def objective(trial):
     # Set hyperparameters to tune
     BATCH_SIZE = trial.suggest_categorical("BATCH_SIZE", [16, 32, 64])
-    EPOCHS = trial.suggest_categorical("EPOCHS", [10, 20, 30])
+    EPOCHS = 50
     LR = trial.suggest_categorical("LR", [0.001, 0.01, 0.1])
     MOMENTUM = trial.suggest_categorical("MOMENTUM", [0.9, 0.95, 0.99])
     WEIGHT_DECAY = trial.suggest_categorical("WEIGHT_DECAY", [0.0001, 0.001, 0.01])
     STEP_SIZE = trial.suggest_categorical("STEP_SIZE", [5, 10, 15])
     GAMMA = trial.suggest_categorical("GAMMA", [0.1, 0.5, 0.9])
     TRAIN_SPLIT = trial.suggest_categorical("TRAIN_SPLIT", [0.7, 0.8, 0.9])
-    MLP_HIDDEN_SIZES = trial.suggest_categorical("MLP_HIDDEN_SIZES", [[256, 128, 64], [512, 256, 128], [1024, 512, 256]])
-    DROPOUT = trial.suggest_categorical("DROPOUT", [0.0, 0.1, 0.2])
+    MLP_HIDDEN_SIZES = trial.suggest_categorical("MLP_HIDDEN_SIZES", [[512, 256, 128], [256, 128, 64], [128, 64, 32]])
+    DROPOUT = trial.suggest_categorical("DROPOUT", [[0.05, 0.1, 0.2], [0.2, 0.1, 0.05], [0.1, 0.1, 0.1]])
 
     # get data loaders
     data_loader, train_loader, val_loader, test_loader = cached_dataloader.getData(BATCH_SIZE, TRAIN_SPLIT)
@@ -286,11 +284,9 @@ def objective(trial):
 
     model = model.to(device)
 
+    criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), lr=LR, momentum=MOMENTUM, weight_decay=WEIGHT_DECAY)
-
     lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=STEP_SIZE, gamma=GAMMA)
-
-    criterion = nn.BCEWithLogitsLoss()
 
     best_model, train_metrics = train(train_loader, val_loader, device, model, criterion, optimizer, lr_scheduler, EPOCHS)
     trial.set_user_attr("best_model", best_model)
