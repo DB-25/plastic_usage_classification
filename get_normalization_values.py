@@ -1,10 +1,14 @@
+# Yalala Mohit
+# Dhruv Kamalesh Kumar
+
+# Import libraries
 import torch
 from torchvision import datasets, transforms
 
 # Define the transforms
 data_transform = transforms.Compose([
-    transforms.Resize((224, 224)),   # Resize to a fixed size
-    transforms.ToTensor(),   # Convert the image to a tensor
+    transforms.Resize((224, 224)),  # Resize to a fixed size
+    transforms.ToTensor(),  # Convert the image to a tensor
 ])
 
 # Load the dataset

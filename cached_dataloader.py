@@ -1,3 +1,7 @@
+# Yalala Mohit
+# Dhruv Kamalesh Kumar
+
+# Import libraries
 import os
 
 import torch
@@ -14,15 +18,12 @@ torch.manual_seed(random_seed)
 # Define the transforms
 dataTransform = transforms.Compose([
     transforms.Resize((224, 224)),  # Resize to a fixed size
-    # transforms.Pad((100, 100), fill=0),   # Pad with zeros to match the desired size
-    # transforms.RandomHorizontalFlip(),   # Apply horizontal flip randomly
-    # transforms.RandomRotation(10),   # Rotate the image randomly by up to 10 degrees
     transforms.ToTensor(),  # Convert the image to a tensor
     transforms.Normalize([0.7561, 0.7166, 0.6853], [0.2465, 0.2584, 0.2781]),  # Normalize the pixel values
-    # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
 
+# Create a custom dataset
 class CachedDataset(Dataset):
     def __init__(self, data, save_dir=None):
         self.data = data
@@ -49,6 +50,7 @@ class CachedDataset(Dataset):
             return transformed_x, y
 
 
+# Create a custom data loader
 class CachedDataLoader(DataLoader):
     def __init__(self, dataset, batch_size=1, shuffle=False, num_workers=0, pin_memory=False, save_dir=None):
         super().__init__(
@@ -73,6 +75,7 @@ class CachedDataLoader(DataLoader):
         return images, labels
 
 
+# Create a function to get the data loaders
 def getData(batch_size, train_split):
     # Set the paths for the train and validation sets
     data_dir = './dataset/plasticClassification'

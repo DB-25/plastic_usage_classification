@@ -1,4 +1,7 @@
-# import the necessary libraries
+# Yalala Mohit
+# Dhruv Kamalesh Kumar
+
+# Import libraries
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
@@ -8,6 +11,7 @@ import torchvision.transforms as T
 import cached_dataloader
 import helper
 
+# Transforms
 transform = T.ToPILImage()
 inv_normalize = T.Normalize(
     mean=[-0.7561 / 0.2465, -0.7166 / 0.2584, -0.6853 / 0.2781],

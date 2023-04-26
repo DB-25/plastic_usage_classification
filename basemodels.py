@@ -1,7 +1,14 @@
+# Yalala Mohit
+# Dhruv Kamalesh Kumar
+
+# Import libraries
 from torch import nn
 
 
 # MLP head
+# Input: in_channels, num_classes, hidden_sizes, dropout_probability
+# Output: nn.Sequential
+# used to add more layers to the model
 class MLP(nn.Module):
     def __init__(self, in_channels, num_classes, hidden_sizes=[128, 64], dropout_probability=[0.5, 0.7]):
         super(MLP, self).__init__()
