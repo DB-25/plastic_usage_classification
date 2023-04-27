@@ -17,9 +17,12 @@ torch.manual_seed(random_seed)
 
 # Define the transforms
 dataTransform = transforms.Compose([
-    transforms.Resize((224, 224)),  # Resize to a fixed size
-    transforms.ToTensor(),  # Convert the image to a tensor
-    transforms.Normalize([0.7561, 0.7166, 0.6853], [0.2465, 0.2584, 0.2781]),  # Normalize the pixel values
+    transforms.RandomResizedCrop(size=224, scale=(0.5, 1.0)), # Randomly crop the image to a size of 224x224
+    # transforms.RandomHorizontalFlip(p=0.5), # Randomly flip the image horizontally with a probability of 0.5
+    # transforms.RandomRotation(degrees=10), # Randomly rotate the image by up to 10 degrees
+    # transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2), # Randomly adjust the brightness, contrast, saturation, and hue of the image
+    transforms.ToTensor(), # Convert the image to a tensor
+    transforms.Normalize([0.7561, 0.7166, 0.6853], [0.2465, 0.2584, 0.2781]) # Normalize the pixel values
 ])
 
 
