@@ -17,7 +17,7 @@ Github Code - https://github.com/DB-25/plastic_usage_classification (Private)
 
 PPT - https://docs.google.com/presentation/d/1LfYQy4zYn1mx-We8hg889fRaw2H4y0gcDv_2w9NCdpI/edit?usp=sharing
 
-Video Presentation - 
+Video Presentation - https://drive.google.com/file/d/1cBOUYYvzQw0MOCYVA9kZck_UHCKLcygV/view?usp=sharing
 
 
 
