@@ -1,41 +1,43 @@
 # Yalala Mohit
-# 08-04-2023
+# Dhruv Kamalesh Kumar
 
-
-# import the necessary packages
+import numpy as np
+import pandas as pd
+# Import libraries
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-import cached_dataloader
-
 from sklearn import metrics
-
 from tqdm import tqdm
-import numpy as np
-import pandas as pd
-
 from transformers import ViTImageProcessor
 from transformers import ViTModel
 
+import cached_dataloader
+
+
 # ************************Metrics*******************************
+# method to get the accuracy
 def accuracy(truth, pred):
     return metrics.accuracy_score(truth, pred)
 
 
+# method to get the precision
 def precision(y_true, y_pred):
     return metrics.precision_score(y_true, y_pred, average='weighted')
 
 
+# method to get the recall
 def recall(y_true, y_pred):
     return metrics.recall_score(y_true, y_pred, average='weighted')
 
 
+# method to get the f1 score
 def f1score(y_true, y_pred):
     return metrics.f1_score(y_true, y_pred, average='weighted')
 
 
 # **************************Train*************************************
+# method to train the model
 def train(train_dataset, val_dataset, device, model, criterion, optimizer, lr_scheduler, trial=None):
     EPOCH = 50
     NUM_CLASSES = 4
@@ -153,6 +155,7 @@ def train(train_dataset, val_dataset, device, model, criterion, optimizer, lr_sc
 
 
 # ************************* MODEL DEFINITION **********************************
+# Model definition
 class MLP(nn.Module):
     def __init__(self, in_channels, num_classes, hidden_sizes=[128, 64], dropout_probability=[0.5, 0.7]):
         super(MLP, self).__init__()
@@ -179,6 +182,7 @@ class MLP(nn.Module):
         return out
 
 
+# Vision model
 class VisionModel(nn.Module):
     def __init__(self, modality1, mlp_hidden_sizes, dropout_prob, batch_size, device):
         super().__init__()
